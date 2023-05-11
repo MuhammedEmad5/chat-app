@@ -5,8 +5,12 @@ import 'package:flutter/material.dart';
 class AppColors{
  static Color firstColor=const Color(0xff6E00DD);
  static Color secondColor=const Color(0xffA826C7);
+ static Color firstSearchColor=const Color(0xff8720DC);
+ static Color secondSearchColor=const Color(0xffAA37CE);
  static Color white=const Color(0xffFFFFFF);
  static Color black=const Color(0xff000000);
+
+
 
 
  static MaterialColor myMaterialColor = MaterialColor(firstColor.value, <int, Color>{

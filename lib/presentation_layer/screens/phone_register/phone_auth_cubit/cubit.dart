@@ -1,18 +1,21 @@
-import 'package:chat_app/business_logic_layer/phone_auth_cubit/states.dart';
+import 'package:chat_app/presentation_layer/screens/phone_register/phone_auth_cubit/states.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class PhoneAuthCubit extends Cubit<PhoneAuthStates> {
-  PhoneAuthCubit() : super(PhoneAuthInitialState());
+import '../../../../application_layer/shared_preferences/shared_preferences.dart';
 
-  late String _verificationId;
+
+
+class PhoneAuthCubit extends Cubit<PhoneAuthStates> {
+
+  PhoneAuthCubit() : super(PhoneAuthInitialState());
 
   static PhoneAuthCubit get(context) => BlocProvider.of(context);
 
   FirebaseAuth auth = FirebaseAuth.instance;
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
+  Future<void> verifyPhoneNumber(String phoneNumber,{int? forceResendingToken}) async {
     emit(PhoneAuthLoadingState());
     await auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
@@ -20,6 +23,7 @@ class PhoneAuthCubit extends Cubit<PhoneAuthStates> {
       verificationCompleted: verificationCompleted,
       verificationFailed: verificationFailed,
       codeSent: codeSent,
+      forceResendingToken: forceResendingToken,
       codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
     );
   }
@@ -44,62 +48,46 @@ class PhoneAuthCubit extends Cubit<PhoneAuthStates> {
     emit(PhoneAuthErrorState(error.toString()));
   }
 
-  void codeSent(String verificationId, int? resendToken)async {
-
-    _verificationId = verificationId;
-    if (kDebugMode) {
-      print('codeSent!!!!!!!!!!!!!!!!!!!!!!!!!!!!!$_verificationId');
-    }
+  void codeSent(String verificationId, [int? forceResendingToken])async {
+    CashHelper.putStringData(key: 'verificationId', value: verificationId);
+    CashHelper.putIntData(key: 'forceResendingToken', value: forceResendingToken!);
     emit(PhoneAuthSmsSentSuccessState());
   }
 
   void codeAutoRetrievalTimeout(String verificationId) {
-    _verificationId = verificationId;
+    CashHelper.putStringData(key: 'verificationId', value: verificationId);
     if (kDebugMode) {
       print('time out');
     }
-    emit(PhoneTimeOutState('time out'));
   }
 
 
-
   Future<void> submitOtp(String otpCode) async {
-    final PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId, smsCode: otpCode);
+     PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: CashHelper.getStringData(key: 'verificationId')!,
+         smsCode: otpCode,
+     );
 
     await signIn(credential);
   }
 
   Future<void> signIn(PhoneAuthCredential credential) async {
+    emit(PhoneOtpVerifiedLoadingState());
     try {
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      emit(PhoneOtpVerifiedSuccessState());
+      await auth.signInWithCredential(credential).then((value) {
+       // getLoggedInUser();
+        emit(PhoneOtpVerifiedSuccessState(value.user!.uid));
+      });
     } catch (error) {
       emit(PhoneAuthErrorState(error.toString()));
     }
   }
 
-
-
-
-  Future<void> logOut() async {
-    await FirebaseAuth.instance.signOut();
+  void reSend(String phoneNumber,int forceResendingToken){
+    verifyPhoneNumber(phoneNumber,forceResendingToken:forceResendingToken);
   }
 
-  User getLoggedInUser() {
-    User firebaseUser = FirebaseAuth.instance.currentUser!;
-    return firebaseUser;
-  }
 
-// File? pickedImage;
-// Future<void> pickBrestCancerImage() async {
-//   final image =
-//       await ImagePicker().pickImage(source: ImageSource.gallery);
-//   if (image != null) {
-//     pickedImage = File(image.path);
-//     emit(PickImageSuccessState());
-//   } else {
-//     emit(PickImageErrorState());
-//   }
-// }
+
+
 }

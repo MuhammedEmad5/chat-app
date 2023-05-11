@@ -26,4 +26,18 @@ class CashHelper {
   static String? getStringData({required String key}){
     return sharedPreferences!.getString(key);
   }
+
+  static Future<bool> putIntData({required String key, required int value}) async {
+
+    return await sharedPreferences!.setInt(key, value);
+  }
+
+  static int? getIntData({required String key}){
+    return sharedPreferences!.getInt(key);
+  }
+
+  static void deleteData({required String key}){
+     sharedPreferences!.remove(key);
+  }
+
 }

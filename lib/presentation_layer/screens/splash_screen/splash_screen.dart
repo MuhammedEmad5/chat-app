@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'package:chat_app/application_layer/app_strings.dart';
-import 'package:chat_app/presentation_layer/screens/phone_verification_screen.dart';
+import 'package:chat_app/application_layer/constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
-import '../../application_layer/app_colors.dart';
-import '../../application_layer/shared_preferences/shared_preferences.dart';
+import '../../../application_layer/constants/app_colors.dart';
+import '../../../application_layer/shared_preferences/shared_preferences.dart';
+import '../phone_register/phone_verification_screen.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({Key? key}) : super(key: key);

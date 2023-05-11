@@ -1,14 +1,16 @@
-import 'package:chat_app/application_layer/app_strings.dart';
-import 'package:chat_app/business_logic_layer/phone_auth_cubit/cubit.dart';
-import 'package:chat_app/business_logic_layer/phone_auth_cubit/states.dart';
+import 'package:chat_app/application_layer/constants/app_strings.dart';
+import 'package:chat_app/presentation_layer/screens/phone_register/phone_auth_cubit/cubit.dart';
+import 'package:chat_app/presentation_layer/screens/phone_register/phone_auth_cubit/states.dart';
 import 'package:chat_app/presentation_layer/widgets/default_button.dart';
+import 'package:chat_app/presentation_layer/widgets/snack_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
+import '../../widgets/loading.dart';
 import 'otp_screen.dart';
+
 
 
 class PhoneVerificationScreen extends StatelessWidget {
@@ -17,6 +19,7 @@ class PhoneVerificationScreen extends StatelessWidget {
   final TextEditingController phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
    String? phoneNumber;
+  String? countryCode;
 
   Widget phoneTitleText(context){
     return Text(
@@ -55,7 +58,7 @@ class PhoneVerificationScreen extends StatelessWidget {
       },
       onSaved: (phone){
         phoneNumber=phone!.completeNumber.toString();
-        print('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu$phoneNumber');
+        countryCode=phone.countryCode;
       },
     );
   }
@@ -64,10 +67,9 @@ class PhoneVerificationScreen extends StatelessWidget {
     AlertDialog alertDialog = const AlertDialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
+
       content: Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-        ),
+        child: AppLoading()
       ),
     );
 
@@ -81,8 +83,6 @@ class PhoneVerificationScreen extends StatelessWidget {
     );
   }
 
-
-
   Widget nextButton(context){
     return BlocProvider(
       create: (BuildContext context) =>PhoneAuthCubit(),
@@ -91,49 +91,33 @@ class PhoneVerificationScreen extends StatelessWidget {
           return previous !=current;
         },
         listener: (BuildContext context, state) {
-          if (state is PhoneAuthLoadingState){
-            return showProgressIndicator(context);
-          }
           if (state is PhoneAuthSmsSentSuccessState){
             Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (_)=>OtpScreen(phoneNumber: phoneNumber!,)));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please check your phone for the verification code.'),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_)=>OtpScreen(phoneNumber: phoneNumber!, countryCode: countryCode!,)));
+            defaultSnackBar(context, 'Please check your phone for the verification code');
           }
           if (state is PhoneAuthErrorState){
-            Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text((state).error,),));
           }
-
         },
         builder: (BuildContext context, state) {
           PhoneAuthCubit cubit=PhoneAuthCubit.get(context);
-          return Row(
-            children: [
-              const Spacer(),
-              Expanded(
-                child: DefaultButton(
-                  widget: const Text(
-                    'Next',
-                  ),
-                  onPressed: () {
-                    showProgressIndicator(context);
-                    if(_formKey.currentState!.validate()){
-                      Navigator.pop(context);
-                      _formKey.currentState!.save();
-                      cubit.verifyPhoneNumber(phoneNumber!);
-                    }else {
-                      Navigator.pop(context);
-                      return;
-                    }
-                  },
-                ),
-              ),
-            ],
+          return state is PhoneAuthLoadingState
+              ? const AppLoading()
+              : DefaultButton(
+            text: 'Next',
+            onPressed: () {
+              showProgressIndicator(context);
+              if(_formKey.currentState!.validate()){
+                Navigator.pop(context);
+                _formKey.currentState!.save();
+                cubit.verifyPhoneNumber(phoneNumber!);
+              }else {
+                Navigator.pop(context);
+                return;
+              }
+            },
           );
         },
       ),
@@ -154,7 +138,7 @@ class PhoneVerificationScreen extends StatelessWidget {
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: 35.h),
                   phoneTitleText(context),
@@ -163,7 +147,10 @@ class PhoneVerificationScreen extends StatelessWidget {
                   SizedBox(height: 100.h),
                   phoneField(),
                   SizedBox(height: 35.h),
-                  nextButton(context),
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(start: 180.0.w),
+                    child: nextButton(context),
+                  ),
                 ],
               ),
             ),

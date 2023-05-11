@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'app_colors.dart';
+import 'constants/app_colors.dart';
 
 ThemeData lightTheme() {
   return ThemeData(
+    useMaterial3: true,
     fontFamily: 'ubuntu',
     primaryColor: AppColors.firstColor,
     primarySwatch: AppColors.myMaterialColor,
@@ -39,5 +40,22 @@ ThemeData lightTheme() {
       labelSmall: TextStyle(
           fontSize: 10.sp, fontWeight: FontWeight.w200, color: AppColors.black),
     ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: AppColors.white,
+      unselectedItemColor: Colors.black45,
+      selectedIconTheme: const IconThemeData(
+        size: 20,
+      ),
+      unselectedIconTheme: const IconThemeData(
+        size: 20,
+      ),
+      selectedLabelStyle: TextStyle(
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w600
+      ),
+    )
   );
 }
